@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDate;
-
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/rest/book/api")
 @Tag(name = "Book Rest Controller", description = "Contains all operations for managing books")

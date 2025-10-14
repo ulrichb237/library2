@@ -31,7 +31,8 @@ public class Book {
     Set<Loan> loans = new HashSet<Loan>();
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+//    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "BOOK_ID")
     public Integer getId() {
         return id;
@@ -95,7 +96,7 @@ public class Book {
         this.author = author;
     }
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false ,cascade=CascadeType.ALL)
     @JoinColumn(name = "CAT_CODE", referencedColumnName = "CODE")
     public Category getCategory() {
         return category;

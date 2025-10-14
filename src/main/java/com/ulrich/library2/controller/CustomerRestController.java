@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+// Import nécessaire pour la correction: PageImpl
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
@@ -28,9 +30,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/rest/customer/api")
-@Tag(name = "Customer API", description = "Contains all operations for managing customers")  // Remplace @Api
+@Tag(name = "Customer API", description = "Contains all operations for managing customers")
 public class CustomerRestController {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(CustomerRestController.class);
@@ -45,7 +48,7 @@ public class CustomerRestController {
     }
 
     /**
-     * Ajoute un nouveau client dans la base de donnée H2. Si le client existe déjà, on retourne un code indiquant que la création n'a pas abouti.
+     * Ajoute un nouveau client.
      * @param customerDTORequest
      * @return
      */
@@ -77,7 +80,7 @@ public class CustomerRestController {
     }
 
     /**
-     * Met à jour les données d'un client dans la base de donnée H2. Si le client n'est pas retrouvé, on retourne un code indiquant que la mise à jour n'a pas abouti.
+     * Met à jour les données d'un client.
      * @param customerDTORequest
      * @return
      */
@@ -107,7 +110,7 @@ public class CustomerRestController {
     }
 
     /**
-     * Supprime un client dans la base de donnée H2. Si le client n'est pas retrouvé, on retourne le Statut HTTP NO_CONTENT.
+     * Supprime un client.
      * @param customerId
      * @return
      */
@@ -122,6 +125,14 @@ public class CustomerRestController {
         return new ResponseEntity<String>(HttpStatus.NO_CONTENT);
     }
 
+    /**
+     * CORRECTION: La méthode retourne maintenant Page<CustomerDTO> au lieu de List<CustomerDTO>
+     * pour que le frontend puisse accéder aux métadonnées de pagination (totalPages, totalElements).
+     *
+     * @param beginPage
+     * @param endPage
+     * @return ResponseEntity<Page<CustomerDTO>>
+     */
     @GetMapping("/paginatedSearch")
     @Operation(
             summary = "List customers of the Library in a paginated way",
@@ -132,18 +143,31 @@ public class CustomerRestController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerDTO.class))),
             @ApiResponse(responseCode = "204", description = "No Content: no result found"),
     })
-    public ResponseEntity<List<CustomerDTO>> searchCustomers(
+    public ResponseEntity<Page<CustomerDTO>> searchCustomers(
             @RequestParam("beginPage") @Parameter(description = "Beginning page number") int beginPage,
             @RequestParam("endPage") @Parameter(description = "Ending page number") int endPage) {
-        //, UriComponentsBuilder uriComponentBuilder
+
+        // 1. Récupération de la Page<Customer> depuis le service
         Page<Customer> customers = customerService.getPaginatedCustomersList(beginPage, endPage);
-        if (customers != null) {
-            List<CustomerDTO> customerDTOs = customers.stream().map(customer -> {
-                return mapCustomerToCustomerDTO(customer);
-            }).collect(Collectors.toList());
-            return new ResponseEntity<List<CustomerDTO>>(customerDTOs, HttpStatus.OK);
+
+        if (customers.getContent().isEmpty()) {
+            // Utilise le statut 204 si la liste est vide, mais retourne une Page vide pour maintenir la cohérence
+            return new ResponseEntity<>(Page.empty(), HttpStatus.NO_CONTENT);
         }
-        return new ResponseEntity<List<CustomerDTO>>(HttpStatus.NO_CONTENT);
+
+        // 2. Mapping de List<Customer> vers List<CustomerDTO>
+        List<CustomerDTO> customerDTOs = customers.stream()
+                .map(this::mapCustomerToCustomerDTO)
+                .collect(Collectors.toList());
+
+        // 3. Création de Page<CustomerDTO> à l'aide de PageImpl pour conserver les métadonnées de pagination
+        Page<CustomerDTO> customerDTOPage = new PageImpl<>(
+                customerDTOs,
+                customers.getPageable(),
+                customers.getTotalElements()
+        );
+
+        return new ResponseEntity<>(customerDTOPage, HttpStatus.OK);
     }
 
     /**
@@ -187,7 +211,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "204", description = "No Content: no result found"),
     })
     public ResponseEntity<List<CustomerDTO>> searchBookByLastName(@RequestParam("lastName") @Parameter(description = "Last name to search") String lastName) {
-        //,	UriComponentsBuilder uriComponentBuilder
+        //, UriComponentsBuilder uriComponentBuilder
         List<Customer> customers = customerService.findCustomerByLastName(lastName);
         if (customers != null && !CollectionUtils.isEmpty(customers)) {
             List<CustomerDTO> customerDTOs = customers.stream().map(customer -> {
@@ -250,6 +274,8 @@ public class CustomerRestController {
      * @return
      */
     private CustomerDTO mapCustomerToCustomerDTO(Customer customer) {
+        // ModelMapper est initialisé à chaque appel. Pour une meilleure performance, il serait
+        // préférable de l'injecter comme un champ final (private final ModelMapper modelMapper;).
         ModelMapper mapper = new ModelMapper();
         CustomerDTO customerDTO = mapper.map(customer, CustomerDTO.class);
         return customerDTO;
@@ -262,6 +288,7 @@ public class CustomerRestController {
      * @return
      */
     private Customer mapCustomerDTOToCustomer(CustomerDTO customerDTO) {
+        // ModelMapper est initialisé à chaque appel.
         ModelMapper mapper = new ModelMapper();
         Customer customer = mapper.map(customerDTO, Customer.class);
         return customer;

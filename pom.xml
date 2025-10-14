@@ -51,12 +51,6 @@
                 <artifactId>modelmapper</artifactId>
                 <version>3.2.0</version>  <!-- Ou la dernière stable -->
             </dependency>
-
-
-
->
-
-
 		<!-- H2 Database for testing -->
 		<dependency>
 			<groupId>com.h2database</groupId>

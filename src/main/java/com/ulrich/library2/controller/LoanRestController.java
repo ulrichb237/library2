@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/rest/loan/api")
 @Tag(name = "Loan Rest Controller", description = "Contains all operations for managing loans")

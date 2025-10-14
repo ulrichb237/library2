@@ -24,12 +24,13 @@ public class Customer {
 
     private String email;
 
-    private LocalDateTime creationDate;
+    private LocalDateTime creationDate=LocalDateTime.now();
 
     Set<Loan> loans = new HashSet<Loan>();
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+//    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CUSTOMER_ID")
     public Integer getId() {
         return id;
@@ -91,7 +92,7 @@ public class Customer {
     }
 
     public void setCreationDate(LocalDateTime creationDate) {
-        this.creationDate = creationDate;
+        this.creationDate = LocalDateTime.now();
     }
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.customer", cascade = CascadeType.ALL)
