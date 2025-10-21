@@ -131,7 +131,7 @@ public class BookRestController {
     private Book mapBookDTOToBook(BookDTO bookDTO) {
         ModelMapper mapper = new ModelMapper();
         Book book = mapper.map(bookDTO, Book.class);
-        book.setCategory(new Category(bookDTO.getCategory().getCode(), ""));
+        book.setCategory(new Category(bookDTO.getCategory().getCode(), bookDTO.getCategory().getLabel()));
         book.setRegisterDate(LocalDate.now());
         return book;
     }
