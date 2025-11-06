@@ -8,5 +8,12 @@ export default defineConfig({
     port: 5173,
     open: true,
   },
+    proxy: {
+      '/rest': {  // Proxy /rest → backend 8080
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+  },
 });
 
