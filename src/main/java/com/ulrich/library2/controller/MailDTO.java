@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class MailDTO {
 
     @Schema(description = "Mail sender address")
-    public final String MAIL_FROM = "noreply.library.test@gmail.com";
+    public final String MAIL_FROM = "noubijuniors@gmail.com";
 
     @Schema(description = "Customer receiver id")
     private Integer customerId;
